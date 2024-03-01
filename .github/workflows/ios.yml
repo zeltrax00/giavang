@@ -14,9 +14,11 @@ jobs:
     - uses: subosito/flutter-action@v2
     - run: flutter pub get
     - run: flutter build ios --release --no-codesign
+    - run: ls -la;pwd;find . -name *Runner.app*
     - uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         files: ./build/ios/iphoneos/Runner.app
+    
