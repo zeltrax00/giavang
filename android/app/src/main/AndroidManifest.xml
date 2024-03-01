@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="flutter1"
+        android:label="Giá vàng HN"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

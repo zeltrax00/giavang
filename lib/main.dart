@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
@@ -19,11 +18,12 @@ class MyApp extends StatelessWidget {
       create: (context) => MyAppState(),
       child: MaterialApp(
         title: 'Giá vàng Hà Nội',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          useMaterial3: true,
-          colorScheme:
-              ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 85, 29, 148)),
-        ),
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+                seedColor: Color.fromARGB(255, 85, 29, 148)),
+            scaffoldBackgroundColor: Color.fromARGB(255, 255, 231, 171)),
         home: _MyHomePageState(),
       ),
     );
@@ -44,17 +44,10 @@ class MyAppState extends ChangeNotifier {
 
   String updateTime = '';
   String dateFormat = 'HH:mm:ss dd/MM/yyyy';
+  bool isLoading = false;
 
-  void updateGoldPrice() async {
-    print('Update gold price');
+  Future<void> updateDoji() async {
     var responseDoji = await http.get(Uri.parse('http://giavang.doji.vn/'));
-    var responseSjc =
-        await http.get(Uri.parse('https://sjc.com.vn/giavang/textContent.php'));
-    var responsePnj = await http
-        .get(Uri.parse('https://www.pnj.com.vn/blog/gia-vang/?zone=11'));
-    var responseBtmc = await http
-        .get(Uri.parse('https://btmc.vn/bieu-do-gia-vang.html?t=ngay'));
-
     //If the http request is successful the statusCode will be 200
     if (responseDoji.statusCode == 200) {
       String htmlToParse = responseDoji.body;
@@ -68,72 +61,18 @@ class MyAppState extends ChangeNotifier {
       goldPrices['DOJI_SJC']![1] = num.parse(sjc.children[2].innerHtml);
       goldPrices['DOJI_NHAN']![0] = num.parse(htv!.children[1].innerHtml);
       goldPrices['DOJI_NHAN']![1] = num.parse(htv.children[2].innerHtml);
-    } else {
-      print('DOJI error: $responseDoji');
     }
+  }
 
-    if (responseSjc.statusCode == 200) {
-      String htmlToParse = responseSjc.body;
-      var document = parse(htmlToParse);
-      var table = document.getElementsByClassName('bg_bl');
-      num kDivisor = 10000;
-
-      goldPrices['SJC_SJC']![0] = num.parse(table[0]
-              .children[0]
-              .innerHtml
-              .replaceAll(RegExp('[,]'), '')
-              .trim()) ~/
-          kDivisor;
-      goldPrices['SJC_SJC']![1] = num.parse(table[1]
-              .children[0]
-              .innerHtml
-              .replaceAll(RegExp('[,]'), '')
-              .trim()) ~/
-          kDivisor;
-      goldPrices['SJC_NHAN']![0] = num.parse(table[6]
-              .children[0]
-              .innerHtml
-              .replaceAll(RegExp('[,]'), '')
-              .trim()) ~/
-          kDivisor;
-      goldPrices['SJC_NHAN']![1] = num.parse(table[7]
-              .children[0]
-              .innerHtml
-              .replaceAll(RegExp('[,]'), '')
-              .trim()) ~/
-          kDivisor;
-    } else {
-      print('SJC error: $responseSjc');
-    }
-
-    if (responsePnj.statusCode == 200) {
-      String htmlToParse = responsePnj.body;
-      var document = parse(htmlToParse);
-      var table = document.getElementById('content-price');
-
-      var sjcBuy = table?.children[0].children[1].children[0].innerHtml;
-      var sjcSell = table?.children[0].children[2].children[0].innerHtml;
-      var pnjBuy = table?.children[1].children[1].children[0].innerHtml;
-      var pnjSell = table?.children[1].children[2].children[0].innerHtml;
-
-      goldPrices['PNJ_SJC']![0] =
-          num.parse(sjcBuy!.replaceAll(RegExp('[,]'), '').trim());
-      goldPrices['PNJ_SJC']![1] =
-          num.parse(sjcSell!.replaceAll(RegExp('[,]'), '').trim());
-      goldPrices['PNJ_NHAN']![0] =
-          num.parse(pnjBuy!.replaceAll(RegExp('[,]'), '').trim());
-      goldPrices['PNJ_NHAN']![1] =
-          num.parse(pnjSell!.replaceAll(RegExp('[,]'), '').trim());
-    } else {
-      print('PNJ error: $responsePnj');
-    }
-
-    if (responseBtmc.statusCode == 200)
-    {
+  Future<void> updateBtmc() async {
+    var responseBtmc = await http
+        .get(Uri.parse('https://btmc.vn/bieu-do-gia-vang.html?t=ngay'));
+    if (responseBtmc.statusCode == 200) {
       String htmlToParse = responseBtmc.body;
       var document = parse(htmlToParse);
-      var table = document.getElementsByClassName('bd_price_home')[0].children[0];
-      
+      var table =
+          document.getElementsByClassName('bd_price_home')[0].children[0];
+
       var nhanBuy = table.children[2].children[2].children[0].innerHtml.trim();
       var nhanSell = table.children[2].children[3].children[0].innerHtml.trim();
       var sjcBuy = table.children[4].children[3].children[0].innerHtml.trim();
@@ -143,11 +82,76 @@ class MyAppState extends ChangeNotifier {
       goldPrices['BTMC_SJC']![1] = num.parse(sjcSell);
       goldPrices['BTMC_NHAN']![0] = num.parse(nhanBuy);
       goldPrices['BTMC_NHAN']![1] = num.parse(nhanSell);
+    }
+  }
 
-      print('OK');
+  Future<void> updatePnj() async {
+    var responsePnj = await http
+        .get(Uri.parse('https://www.pnj.com.vn/blog/gia-vang/?zone=11'));
+    if (responsePnj.statusCode == 200) {
+      String htmlToParse = responsePnj.body;
+      var document = parse(htmlToParse);
+      var table = document.getElementById('content-price');
+
+      var sjcBuy = table?.children[0].children[1].children[0].innerHtml
+          .replaceAll(RegExp('[,]'), '')
+          .trim();
+      var sjcSell = table?.children[0].children[2].children[0].innerHtml
+          .replaceAll(RegExp('[,]'), '')
+          .trim();
+      var pnjBuy = table?.children[1].children[1].children[0].innerHtml
+          .replaceAll(RegExp('[,]'), '')
+          .trim();
+      var pnjSell = table?.children[1].children[2].children[0].innerHtml
+          .replaceAll(RegExp('[,]'), '')
+          .trim();
+
+      goldPrices['PNJ_SJC']![0] = num.parse(sjcBuy!);
+      goldPrices['PNJ_SJC']![1] = num.parse(sjcSell!);
+      goldPrices['PNJ_NHAN']![0] = num.parse(pnjBuy!);
+      goldPrices['PNJ_NHAN']![1] = num.parse(pnjSell!);
+    }
+  }
+
+  Future<void> updateSjc() async {
+    var responseSjc =
+        await http.get(Uri.parse('https://sjc.com.vn/giavang/textContent.php'));
+    if (responseSjc.statusCode == 200) {
+      String htmlToParse = responseSjc.body;
+      var document = parse(htmlToParse);
+      var table = document.getElementsByClassName('bg_bl');
+      num kDivisor = 10000;
+
+      var sjcBuy =
+          table[0].children[0].innerHtml.replaceAll(RegExp('[,]'), '').trim();
+      var sjcSell =
+          table[1].children[0].innerHtml.replaceAll(RegExp('[,]'), '').trim();
+      var nhanBuy =
+          table[6].children[0].innerHtml.replaceAll(RegExp('[,]'), '').trim();
+      var nhanSell =
+          table[7].children[0].innerHtml.replaceAll(RegExp('[,]'), '').trim();
+      goldPrices['SJC_SJC']![0] = num.parse(sjcBuy) ~/ kDivisor;
+      goldPrices['SJC_SJC']![1] = num.parse(sjcSell) ~/ kDivisor;
+      goldPrices['SJC_NHAN']![0] = num.parse(nhanBuy) ~/ kDivisor;
+      goldPrices['SJC_NHAN']![1] = num.parse(nhanSell) ~/ kDivisor;
+    }
+  }
+
+  void updateGoldPrice() async {
+    print('Update gold price');
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      await Future.wait([updateDoji(), updateBtmc(), updatePnj(), updateSjc()]
+          as Iterable<Future>);
+    } catch (e) {
+      print(e);
     }
 
     updateTime = DateFormat(dateFormat).format(DateTime.now());
+    isLoading = false;
+
     notifyListeners();
   }
 }
@@ -162,7 +166,12 @@ class _MyHomePageState extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(title: const Text('Bảng giá vàng Hà Nội')),
+        appBar: AppBar(
+            backgroundColor: Color.fromARGB(255, 168, 0, 0),
+            title: const Text(
+              'Bảng giá vàng Hà Nội',
+              style: TextStyle(color: Color.fromARGB(255, 255, 217, 0)),
+            )),
         body: MainClass(),
       ),
     );
@@ -333,13 +342,25 @@ class MainClass extends StatelessWidget {
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 150.0),
+            padding: const EdgeInsets.only(bottom: 120.0),
             child: ElevatedButton.icon(
-              onPressed: () {
-                appState.updateGoldPrice();
-              },
-              icon: Icon(Icons.refresh),
-              label: Text('Update'),
+              onPressed: () => appState.updateGoldPrice(),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 0, 0),
+                  foregroundColor: Color.fromARGB(255, 255, 217, 0),
+                  padding: const EdgeInsets.all(16.0)),
+              icon: appState.isLoading
+                  ? Container(
+                      width: 24,
+                      height: 24,
+                      padding: const EdgeInsets.all(2.0),
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color.fromARGB(255, 255, 217, 0),
+                      ),
+                    )
+                  : const Icon(Icons.refresh),
+              label: const Text('Cập nhật'),
             ),
           ),
         ),
