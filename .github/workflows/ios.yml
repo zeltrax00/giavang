@@ -19,11 +19,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
-        files: Runner.app
-
-    - run: mkdir -p /tmp/artifact
-    - run: echo hello > /tmp/artifact/world.txt
-    - uses: actions/upload-artifact@v4
-      with:
-        name: my-artifact
-        path: /tmp/artifact/world.txt
+        files: /Users/runner/work/giavang/giavang/build/ios/iphoneos/Runner.app
