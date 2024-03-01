@@ -6,8 +6,16 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
+    - name: Generate release tag
+      id: tag
+      run: echo "::set-output name=release_tag::giavang_$(date +"%Y-%m-%d_%H.%M")"
+
     - uses: actions/checkout@v4
     - uses: subosito/flutter-action@v2
     - run: flutter pub get
     - run: flutter build ios --release --no-codesign
     - uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
