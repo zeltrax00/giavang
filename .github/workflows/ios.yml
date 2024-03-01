@@ -14,15 +14,13 @@ jobs:
     - uses: subosito/flutter-action@v2
     - run: flutter pub get
     - run: flutter build ios --release --no-codesign
-    - run: find . -name *Runner.app*
-    - run: ls -la ./build/ios/iphoneos/Runner.app
-    - run: ls -la ./build/ios/iphoneos
-    - run: ls -la ./build/ios/Release-iphoneos/Runner.app
-    - run: ls -la ./build/ios/Release-iphoneos
-    #- uses: softprops/action-gh-release@v1
-      #with:
-        #tag_name: ${{ steps.tag.outputs.release_tag }}
-        #files: ./build/ios/iphoneos/Runner.app/*
-      #env:
-        #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - run: mkdir -p Payload
+    - run: cp -r ./build/ios/iphoneos/Runner.app Payload/
+    - run: zip -0 -y -r ${{ steps.tag.outputs.release_tag }}.ipa Payload/
+    - uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        files: ./build/ios/iphoneos/Runner.app/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
