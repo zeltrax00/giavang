@@ -1,16 +1,7 @@
-# flutter1
+# Giá vàng HN - Hanoi gold price viewer
 
-A new Flutter project.
+# VN
+Xem giá vàng miếng SJC và vàng nhẫn trơn của 4 nhà bán vàng lớn nhất: SJC, DOJI, PNJ, Bảo Tín Minh Châu
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# EN
+View the prices of SJC gold bar and plain gold ring from the 4 largest gold sellers: SJC, DOJI, PNJ, Bảo Tín Minh Châu.
